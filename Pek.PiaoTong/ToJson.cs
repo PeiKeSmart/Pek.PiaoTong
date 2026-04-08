@@ -7,28 +7,27 @@ internal class ToJson
 {
     public static String Table2Json(Hashtable table)
     {
-
         StringBuilder jsonstr = new StringBuilder();
         jsonstr.Append("{");
         foreach (DictionaryEntry tableEntry in table)
         {
-            if (tableEntry.Key == "itemList" || tableEntry.Key == "invoiceIssueOptions")
+            var key = Convert.ToString(tableEntry.Key) ?? String.Empty;
+            if (String.Equals(key, "itemList", StringComparison.Ordinal) || String.Equals(key, "invoiceIssueOptions", StringComparison.Ordinal))
             {
-                String liststr = list2json((ArrayList)tableEntry.Value);
+                String liststr = list2json(tableEntry.Value as ArrayList ?? []);
 
-                jsonstr.Append(string.Format("\"{0}\":{1},", tableEntry.Key, liststr));
+                jsonstr.Append(string.Format("\"{0}\":{1},", key, liststr));
 
             }
             else
             {
-                jsonstr.Append(string.Format("\"{0}\":\"{1}\",", tableEntry.Key, tableEntry.Value));
+                jsonstr.Append(string.Format("\"{0}\":\"{1}\",", key, tableEntry.Value));
             }
 
         }
 
-
         jsonstr.Append("}");
-        jsonstr.Remove(jsonstr.Length - 2, 1);
+        if (jsonstr.Length > 2) jsonstr.Remove(jsonstr.Length - 2, 1);
         return jsonstr.ToString();
         //            Console.Write(jsonstr.ToString());
     }

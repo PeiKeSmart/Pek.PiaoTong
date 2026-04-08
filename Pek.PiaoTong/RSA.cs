@@ -18,8 +18,8 @@ internal class RSA
     public static string sign(string content, string privateKey)
     {
         byte[] Data = Encoding.GetEncoding("UTF-8").GetBytes(content);
-        RSACryptoServiceProvider rsa = DecodePemPrivateKey(privateKey);
-        SHA1 sh = new SHA1CryptoServiceProvider();
+        RSACryptoServiceProvider rsa = DecodePemPrivateKey(privateKey) ?? throw new InvalidOperationException("私钥格式无效");
+        using HashAlgorithm sh = SHA1.Create();
         byte[] signData = rsa.SignData(Data, sh);
         return Convert.ToBase64String(signData);
     }
@@ -40,7 +40,7 @@ internal class RSA
         RSAParameters paraPub = ConvertFromPublicKey(publicKey);
         RSACryptoServiceProvider rsaPub = new RSACryptoServiceProvider();
         rsaPub.ImportParameters(paraPub);
-        SHA1 sh = new SHA1CryptoServiceProvider();
+        using HashAlgorithm sh = SHA1.Create();
         result = rsaPub.VerifyData(Data, sh, data);
         return result;
     }
@@ -92,8 +92,7 @@ internal class RSA
 
     private static string encrypt(byte[] data, string publicKey, string input_charset)
     {
-        RSACryptoServiceProvider rsa = DecodePemPublicKey(publicKey);
-        SHA1 sh = new SHA1CryptoServiceProvider();
+        RSACryptoServiceProvider rsa = DecodePemPublicKey(publicKey) ?? throw new InvalidOperationException("公钥格式无效");
         byte[] result = rsa.Encrypt(data, false);
 
         return Convert.ToBase64String(result);
@@ -102,8 +101,7 @@ internal class RSA
     private static string decrypt(byte[] data, string privateKey, string input_charset)
     {
         string result = "";
-        RSACryptoServiceProvider rsa = DecodePemPrivateKey(privateKey);
-        SHA1 sh = new SHA1CryptoServiceProvider();
+        RSACryptoServiceProvider rsa = DecodePemPrivateKey(privateKey) ?? throw new InvalidOperationException("私钥格式无效");
         byte[] source = rsa.Decrypt(data, false);
         char[] asciiChars = new char[Encoding.GetEncoding(input_charset).GetCharCount(source, 0, source.Length)];
         Encoding.GetEncoding(input_charset).GetChars(source, 0, source.Length, asciiChars, 0);
@@ -112,33 +110,33 @@ internal class RSA
         return result;
     }
 
-    private static RSACryptoServiceProvider DecodePemPublicKey(String pemstr)
+    private static RSACryptoServiceProvider? DecodePemPublicKey(String pemstr)
     {
         byte[] pkcs8publickkey;
         pkcs8publickkey = Convert.FromBase64String(pemstr);
         if (pkcs8publickkey != null)
         {
-            RSACryptoServiceProvider rsa = DecodeRSAPublicKey(pkcs8publickkey);
+            RSACryptoServiceProvider? rsa = DecodeRSAPublicKey(pkcs8publickkey);
             return rsa;
         }
         else
             return null;
     }
 
-    private static RSACryptoServiceProvider DecodePemPrivateKey(String pemstr)
+    private static RSACryptoServiceProvider? DecodePemPrivateKey(String pemstr)
     {
         byte[] pkcs8privatekey;
         pkcs8privatekey = Convert.FromBase64String(pemstr);
         if (pkcs8privatekey != null)
         {
-            RSACryptoServiceProvider rsa = DecodePrivateKeyInfo(pkcs8privatekey);
+            RSACryptoServiceProvider? rsa = DecodePrivateKeyInfo(pkcs8privatekey);
             return rsa;
         }
         else
             return null;
     }
 
-    private static RSACryptoServiceProvider DecodePrivateKeyInfo(byte[] pkcs8)
+    private static RSACryptoServiceProvider? DecodePrivateKeyInfo(byte[] pkcs8)
     {
         byte[] SeqOID = { 0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01, 0x05, 0x00 };
         byte[] seq = new byte[15];
@@ -185,7 +183,7 @@ internal class RSA
             //------ at this stage, the remaining sequence should be the RSA private key
 
             byte[] rsaprivkey = binr.ReadBytes((int)(lenstream - mem.Position));
-            RSACryptoServiceProvider rsacsp = DecodeRSAPrivateKey(rsaprivkey);
+            RSACryptoServiceProvider? rsacsp = DecodeRSAPrivateKey(rsaprivkey);
             return rsacsp;
         }
 
@@ -212,7 +210,7 @@ internal class RSA
         return true;
     }
 
-    private static RSACryptoServiceProvider DecodeRSAPublicKey(byte[] publickey)
+    private static RSACryptoServiceProvider? DecodeRSAPublicKey(byte[] publickey)
     {
         // encoded OID sequence for  PKCS #1 rsaEncryption szOID_RSA_RSA = "1.2.840.113549.1.1.1"
         byte[] SeqOID = { 0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01, 0x05, 0x00 };
@@ -307,7 +305,7 @@ internal class RSA
 
     }
 
-    private static RSACryptoServiceProvider DecodeRSAPrivateKey(byte[] privkey)
+    private static RSACryptoServiceProvider? DecodeRSAPrivateKey(byte[] privkey)
     {
         byte[] MODULUS, E, D, P, Q, DP, DQ, IQ;
 
