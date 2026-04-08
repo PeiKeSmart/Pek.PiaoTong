@@ -25,8 +25,8 @@
     <!--禁止生成launchSettings.json-->
     <NoDefaultLaunchSettingsFile>True</NoDefaultLaunchSettingsFile>
 
-    <!--元包配置：不包含自身 DLL，仅作为依赖聚合-->
-    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <!--正常类库包配置：包含自身 DLL 产物-->
+    <IncludeBuildOutput>true</IncludeBuildOutput>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -42,7 +42,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <!--元包不包含代码，无需生成符号包-->
+    <!--当前仅生成主包，不额外生成符号包-->
     <IncludeSymbols>false</IncludeSymbols>
     <PackageReadmeFile></PackageReadmeFile>
     <!--<GeneratePackageOnBuild>true</GeneratePackageOnBuild>-->
